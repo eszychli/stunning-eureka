@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to M3U Converter</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">CSV to M3U Converter</h1>
+        <form id="csvForm">
+            <div class="form-group">
+                <label for="csvFile">Upload CSV File</label>
+                <input type="file" class="form-control-file" id="csvFile" accept=".csv">
+            </div>
+            <div class="form-group">
+                <label for="videoPathColumn">Video Path Column Name</label>
+                <input type="text" class="form-control" id="videoPathColumn" value="video_path" placeholder="Enter column name for video path">
+            </div>
+            <div class="form-group">
+                <label for="titleColumn">Title Column Name</label>
+                <input type="text" class="form-control" id="titleColumn" value="title" placeholder="Enter column name for title">
+            </div>
+            <div class="form-group">
+                <label for="startTimeColumn">Start Time Column Name</label>
+                <input type="text" class="form-control" id="startTimeColumn" value="start_time_sec" placeholder="Enter column name for start time">
+            </div>
+            <div class="form-group">
+                <label for="endTimeColumn">End Time Column Name</label>
+                <input type="text" class="form-control" id="endTimeColumn" value="end_time_sec" placeholder="Enter column name for end time">
+            </div>
+            <button type="submit" class="btn btn-primary">Download M3U</button>
+        </form>
+    </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('csvForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const file = document.getElementById('csvFile').files[0];
+                const videoPathColumn = document.getElementById('videoPathColumn').value;
+                const titleColumn = document.getElementById('titleColumn').value;
+                const startTimeColumn = document.getElementById('startTimeColumn').value;
+                const endTimeColumn = document.getElementById('endTimeColumn').value;
+
+                if (file && videoPathColumn && titleColumn && startTimeColumn && endTimeColumn) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const csv = e.target.result;
+                        console.log('CSV Content:', csv); // Debugging line
+                        const lines = csv.split('\n');
+                        const headers = lines[0].split(',');
+                        console.log('Headers:', headers); // Debugging line
+                        const videoPathIndex = headers.indexOf(videoPathColumn);
+                        const titleIndex = headers.indexOf(titleColumn);
+                        const startTimeIndex = headers.indexOf(startTimeColumn);
+                        const endTimeIndex = headers.indexOf(endTimeColumn);
+
+                        if (videoPathIndex === -1 || titleIndex === -1 || startTimeIndex === -1 || endTimeIndex === -1) {
+                            alert('One or more column names are incorrect.');
+                            return;
+                        }
+
+                        let m3uContent = '#EXTM3U\n';
+                        lines.slice(1).forEach(line => {
+                            const columns = line.split(',');
+                            if (columns.length < headers.length) return; // Skip incomplete lines
+                            const video_path = columns[videoPathIndex];
+                            const title = columns[titleIndex];
+                            const start_time_sec = columns[startTimeIndex];
+                            const end_time_sec = columns[endTimeIndex];
+
+                            console.log('Processing line:', line); // Debugging line
+                            console.log('Parsed values:', { video_path, title, start_time_sec, end_time_sec }); // Debugging line
+
+                            m3uContent += `#EXTINF:-1,${title}\n`;
+                            m3uContent += `#EXTVLCOPT:start-time=${start_time_sec}\n`;
+                            m3uContent += `#EXTVLCOPT:stop-time=${end_time_sec}\n`;
+                            m3uContent += `${video_path}\n`;
+                        });
+
+                        // Create a blob and download the file
+                        const blob = new Blob([m3uContent], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'playlist.m3u';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
