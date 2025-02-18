@@ -8,8 +8,8 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">CSV to M3U Converter</h1>
-        <form id="csvForm">
+        <h1 class="text-center mb-4">CSV to M3U Converter</h1>
+        <form id="csvForm" class="border p-4 rounded">
             <div class="form-group">
                 <label for="csvFile">Upload CSV File</label>
                 <input type="file" class="form-control-file" id="csvFile" accept=".csv">
@@ -30,7 +30,7 @@
                 <label for="endTimeColumn">End Time Column Name</label>
                 <input type="text" class="form-control" id="endTimeColumn" value="end_time_sec" placeholder="Enter column name for end time">
             </div>
-            <button type="submit" class="btn btn-primary">Download M3U</button>
+            <button type="submit" class="btn btn-primary btn-block">Download M3U</button>
         </form>
     </div>
 
@@ -50,12 +50,14 @@
                         const csv = e.target.result;
                         console.log('CSV Content:', csv); // Debugging line
                         const lines = csv.split('\n');
-                        const headers = lines[0].split(',');
+                        const headers = lines[0].split(',').map(header => header.trim());
                         console.log('Headers:', headers); // Debugging line
                         const videoPathIndex = headers.indexOf(videoPathColumn);
                         const titleIndex = headers.indexOf(titleColumn);
                         const startTimeIndex = headers.indexOf(startTimeColumn);
                         const endTimeIndex = headers.indexOf(endTimeColumn);
+
+                        console.log('Column Indices:', { videoPathIndex, titleIndex, startTimeIndex, endTimeIndex }); // Debugging line
 
                         if (videoPathIndex === -1 || titleIndex === -1 || startTimeIndex === -1 || endTimeIndex === -1) {
                             alert('One or more column names are incorrect.');
@@ -66,10 +68,10 @@
                         lines.slice(1).forEach(line => {
                             const columns = line.split(',');
                             if (columns.length < headers.length) return; // Skip incomplete lines
-                            const video_path = columns[videoPathIndex];
-                            const title = columns[titleIndex];
-                            const start_time_sec = columns[startTimeIndex];
-                            const end_time_sec = columns[endTimeIndex];
+                            const video_path = columns[videoPathIndex].trim();
+                            const title = columns[titleIndex].trim();
+                            const start_time_sec = columns[startTimeIndex].trim();
+                            const end_time_sec = columns[endTimeIndex].trim();
 
                             console.log('Processing line:', line); // Debugging line
                             console.log('Parsed values:', { video_path, title, start_time_sec, end_time_sec }); // Debugging line
